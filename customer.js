@@ -1,5 +1,7 @@
 const inquirer = require('inquirer');
+const mysql = require('mysql');
 const Table = require('cli-table');
+const colors = require('colors');
 
 let connection = mysql.createConnection({
     host: 'localhost',
@@ -11,13 +13,13 @@ let connection = mysql.createConnection({
     user: 'root',
 
     // Your password
-    password: '',
+    password: 'root',
     database: 'Bamazon_DB'
 });
 
-connection.connect(function(err) {
+connection.connect(err => {
     if (err) throw err;
-    runSearch();
+    showAllProducts();
 });
 
 let showAllProducts = () => {
@@ -25,7 +27,7 @@ let showAllProducts = () => {
     connection.query(sqlString, (err, res) => {
         if (err) throw err;
 
-        var table = new Table({
+        let table = new Table({
             head: ['Item Id#', 'Product Name', 'Price', 'Quantity'],
             style: {
                 head: ['yellow'],
@@ -33,47 +35,165 @@ let showAllProducts = () => {
                 colAligns: ['center']
             }
         });
+
+        let productsArray = [];
+        let product_name = [];
+
+        // Creating the visual table
+        for (let i = 0; i < res.length; i++) {
+            table.push([
+                res[i].ItemID,
+                res[i].ProductName,
+                res[i].Price,
+                res[i].StockQuanitiy
+            ]);
+            productsArray.push([
+                res[i].ItemID,
+                res[i].ProductName,
+                res[i].Price,
+                res[i].StockQuanitiy
+            ]);
+            product_name.push(res[i].ProductName);
+        }
+
+        let welcomeString = `                   Welcome to Jirgen Jorts
+                This is our current inventory`;
+        console.log(welcomeString.bold.blue);
+        console.log(table.toString());
+
+        promptCustomer(product_name, productsArray);
     });
 };
 
-/*
-1. Create a MySQL Database called `bamazon`.
+let promptCustomer = (inventory, table) => {
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'option',
+                message: 'What is the name of the item would you like to buy?'
+                    .blue,
+                choices: inventory
+            }
+        ])
+        .then(val => {
+            let choiceProduct = val.option;
+            let product;
+            for (let i = 0; i < table.length; i++) {
+                if (table[i][1] === choiceProduct) {
+                    console.log(choiceProduct + ' Chosen option');
+                    product = checkAvailability(choiceProduct, table[i]);
+                    var price = table[i][2];
+                }
+            }
 
-2. Then create a Table inside of that database called `products`.
+            // If there is a product with the name the user chose, prompt the customer for a desired quantity
+            if (product) {
+                console.log(
+                    'There is a product ' +
+                        choiceProduct.blue +
+                        ' available for purchase'
+                );
+                //   Pass the chosen product to promptCustomerForQuantity
+                promptCustomerForQuantity(product, choiceProduct, price);
+            } else {
+                // Otherwise let them know the item is not in the inventory, re-run loadProducts
+                console.log('\nThat item is not in the inventory. ' + product)
+                    .red;
+                showAllProducts();
+            }
+        });
+};
 
-3. The products table should have each of the following columns:
+let checkAvailability = (choiceProduct, inventory) => {
+    console.log(choiceProduct + ' Chosen | ' + inventory[3] + ' available');
+    let currentInventory = inventory[3];
+    for (let i = 0; i < currentInventory; i++) {
+        if (choiceProduct === currentInventory[i]) {
+        }
+        // If a matching product is found, return the product
+        return currentInventory;
+    }
+    // Otherwise return null
+    return null;
+};
 
-   * item_id (unique id for each product)
+let quantityQuestions = [
+    {
+        type: 'input',
+        name: 'quantity',
+        message: 'Right on bruh, How many would you like to buy?'.yellow,
+        validate: val => {
+            return !isNaN(val) || val.toLowerCase() === 'q';
+        }
+    }
+];
 
-   * product_name (Name of product)
+let promptCustomerForQuantity = (product, choiceProduct, price) => {
+    inquirer.prompt(quantityQuestions).then(val => {
+        checkIfExit(val.quantity);
 
-   * department_name
+        let quantity = parseInt(val.quantity);
+        // If there isn't enough of the chosen product and quantity, let the user know and offer to shop more
+        if (quantity > product) {
+            console.log('\nInsufficient quantity!'.bgRed.black.bold);
+        } else {
+            // Otherwise run makePurchase, give it the product information and desired quantity to purchase
+            console.log('Purchased!');
+            makePurchase(choiceProduct, quantity, price);
+        }
+        console.log(quantity + ' Is the Quantity requested');
+        console.log(product + ' is the quantity on hand');
+        shopMore();
+    });
+};
 
-   * price (cost to customer)
+let makePurchase = (choiceProduct, quantity, price) => {
+    //let queryString = `UPDATE products SET StockQuanitiy = StockQuanitiy - ${quantity} WHERE ProductName = ${choiceProduct}`;
+    connection.query(
+        'UPDATE products SET StockQuanitiy = StockQuanitiy - ? WHERE ProductName = ?',
+        [quantity, choiceProduct],
+        (err, res) => {
+            if (err) throw err;
+            // console.log(res);
+            // Let the user know the purchase was successful, offer to shop more
+            console.log(
+                '\nSuccessfully purchased ' +
+                    quantity +
+                    ' ' +
+                    choiceProduct +
+                    "'s!"
+            );
+            console.log('\nYour total is: $' + price.toFixed(2));
+            shopMore();
+        }
+    );
+};
 
-   * stock_quantity (how much of the product is available in stores)
+let shopMore = () => {
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'shop',
+                message: 'Would you like to continue shopping?'.blue,
+                choices: ['Yes', 'No']
+            }
+        ])
+        .then(answers => {
+            if (answers.shop === 'Yes') {
+                showAllProducts();
+            } else {
+                console.log('Thank you for Shopping with us!');
+                process.exit(0);
+            }
+        });
+};
 
-4. Populate this database with around 10 different products. (i.e. Insert "mock" data rows into this database and table).
-
-5. Then create a Node application called `bamazonCustomer.js`. Running this application will first display all of the items available for sale. Include the ids, names, and prices of products for sale.
-
-6. The app should then prompt users with two messages.
-
-   * The first should ask them the ID of the product they would like to buy.
-   * The second message should ask how many units of the product they would like to buy.
-
-7. Once the customer has placed the order, your application should check if your store has enough of the product to meet the customer's request.
-
-   * If not, the app should log a phrase like `Insufficient quantity!`, and then prevent the order from going through.
-
-8. However, if your store _does_ have enough of the product, you should fulfill the customer's order.
-   * This means updating the SQL database to reflect the remaining quantity.
-   * Once the update goes through, show the customer the total cost of their purchase.
-
-- - -
-
-* If this activity took you between 8-10 hours, then you've put enough time into this assignment. Feel free to stop here -- unless you want to take on the next challenge.
-
-- - -
-
-*/
+let checkIfExit = choice => {
+    if (choice.toLowerCase() === 'q') {
+        // Log a message and exit the current node process
+        console.log('Goodbye!');
+        process.exit(0);
+    }
+};
