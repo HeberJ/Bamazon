@@ -1,0 +1,32 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "customer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server6.js",
+    "watch": "nodemon server6.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HeberJ/Bamazon.git"
+  },
+  "keywords": [
+    "npm",
+    "mysql",
+    "inquirer"
+  ],
+  "author": "Heber Jiménez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HeberJ/Bamazon/issues"
+  },
+  "homepage": "https://github.com/HeberJ/Bamazon#readme",
+  "dependencies": {
+    "cli-table": "^0.3.1",
+    "console.table": "^0.10.0",
+    "inquirer": "^6.0.0",
+    "mysql": "^2.16.0"
+  }
+}
