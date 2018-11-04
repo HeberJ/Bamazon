@@ -12,3 +12,5 @@ If quantity the customer wants is in stock the purchase will finish and the user
 
 If the item is not in stock Bamazon will notify that it does not have enough in stock, and will show them what they requested and how many items are actually in stock. Then it will ask the customer if they would like to continue shopping.
 <img src="/images/ScreenShot4.png">
+
+VIDEO:  https://youtu.be/wLAXvDUsois
