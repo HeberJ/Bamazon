@@ -1,6 +1,6 @@
 # Bamazon
 
-The Bamazon shows users the current items available for purchase. The user will be prompted a list to select the item they wish to purchase
+The Bamazon shows users the current items available for purchase. The user will be prompted a list to select the item they wish to purchase.
 <img src="/images/ScreenShot1.png">
 
 If the item is in stock, the customer will be asked the quantity of the product they wish to purchase.
