@@ -81,7 +81,7 @@ let promptCustomer = (inventory, table) => {
             let product;
             for (let i = 0; i < table.length; i++) {
                 if (table[i][1] === choiceProduct) {
-                    console.log(choiceProduct + ' Chosen option');
+                    console.log(`${choiceProduct} Chosen option`);
                     product = checkAvailability(choiceProduct, table[i]);
                     var price = table[i][2];
                 }
@@ -98,15 +98,16 @@ let promptCustomer = (inventory, table) => {
                 promptCustomerForQuantity(product, choiceProduct, price);
             } else {
                 // Otherwise let them know the item is not in the inventory, re-run loadProducts
-                console.log('\nThat item is not in the inventory. ' + product)
-                    .red;
+                console.log(
+                    `\nThat item is not in the inventory.\n`.black.bold.bgRed
+                );
                 showAllProducts();
             }
         });
 };
 
 let checkAvailability = (choiceProduct, inventory) => {
-    console.log(choiceProduct + ' Chosen | ' + inventory[3] + ' available');
+    console.log(`${choiceProduct} Chosen | ${inventory[3]} available`);
     let currentInventory = inventory[3];
     for (let i = 0; i < currentInventory; i++) {
         if (choiceProduct === currentInventory[i]) {
@@ -137,14 +138,14 @@ let promptCustomerForQuantity = (product, choiceProduct, price) => {
         // If there isn't enough of the chosen product and quantity, let the user know and offer to shop more
         if (quantity > product) {
             console.log('\nInsufficient quantity!'.bgRed.black.bold);
+            console.log(`${quantity} is the Quantity requested`);
+            console.log(`${product} is the quantity on hand`);
+            shopMore();
         } else {
             // Otherwise run makePurchase, give it the product information and desired quantity to purchase
             console.log('Purchased!');
             makePurchase(choiceProduct, quantity, price);
         }
-        console.log(quantity + ' Is the Quantity requested');
-        console.log(product + ' is the quantity on hand');
-        shopMore();
     });
 };
 
@@ -157,14 +158,8 @@ let makePurchase = (choiceProduct, quantity, price) => {
             if (err) throw err;
             // console.log(res);
             // Let the user know the purchase was successful, offer to shop more
-            console.log(
-                '\nSuccessfully purchased ' +
-                    quantity +
-                    ' ' +
-                    choiceProduct +
-                    "'s!"
-            );
-            console.log('\nYour total is: $' + price.toFixed(2));
+            console.log(`\nSuccessfully purchased ${quantity} choiceProduct`);
+            console.log(`Your total is: ${price.toFixed(2)} \n`);
             shopMore();
         }
     );
